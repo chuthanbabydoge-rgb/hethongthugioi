@@ -1,22 +1,30 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Thú Giới API - Animal Universe
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: beasts
+    description: Beast management
+  - name: breeding
+    description: Breeding operations
+  - name: species
+    description: Species and races
+  - name: maps
+    description: Universe maps
+  - name: stats
+    description: Statistics and analytics
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,366 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /beasts:
+    get:
+      operationId: listBeasts
+      tags: [beasts]
+      summary: List all beasts
+      parameters:
+        - name: tier
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: species
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: raceCategory
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: search
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: page
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of beasts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeastListResponse"
+    post:
+      operationId: createBeast
+      tags: [beasts]
+      summary: Create a new beast
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BeastInput"
+      responses:
+        "201":
+          description: Created beast
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Beast"
+
+  /beasts/{id}:
+    get:
+      operationId: getBeast
+      tags: [beasts]
+      summary: Get a beast by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Beast details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Beast"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBeast
+      tags: [beasts]
+      summary: Update a beast
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BeastUpdate"
+      responses:
+        "200":
+          description: Updated beast
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Beast"
+    delete:
+      operationId: deleteBeast
+      tags: [beasts]
+      summary: Delete a beast
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /beasts/{id}/evolve:
+    post:
+      operationId: evolveBeast
+      tags: [beasts]
+      summary: Evolve a beast to next tier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Evolved beast
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Beast"
+
+  /beasts/legendary:
+    get:
+      operationId: listLegendaryBeasts
+      tags: [beasts]
+      summary: List legendary and dark-legendary beasts
+      responses:
+        "200":
+          description: Legendary beasts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Beast"
+
+  /beasts/recent:
+    get:
+      operationId: listRecentBeasts
+      tags: [beasts]
+      summary: List recently created or bred beasts
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Recent beasts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Beast"
+
+  /breeding:
+    get:
+      operationId: listBreedingRecords
+      tags: [breeding]
+      summary: List breeding history
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Breeding records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BreedingRecord"
+    post:
+      operationId: breedBeasts
+      tags: [breeding]
+      summary: Breed two beasts to create offspring
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BreedingInput"
+      responses:
+        "201":
+          description: Breeding result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BreedingResult"
+
+  /species:
+    get:
+      operationId: listSpecies
+      tags: [species]
+      summary: List all species
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Species list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Species"
+    post:
+      operationId: createSpecies
+      tags: [species]
+      summary: Create a new species
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeciesInput"
+      responses:
+        "201":
+          description: Created species
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Species"
+
+  /species/{id}:
+    patch:
+      operationId: updateSpecies
+      tags: [species]
+      summary: Update species
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeciesUpdate"
+      responses:
+        "200":
+          description: Updated species
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Species"
+    delete:
+      operationId: deleteSpecies
+      tags: [species]
+      summary: Delete species
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /maps:
+    get:
+      operationId: listMaps
+      tags: [maps]
+      summary: List all universe maps
+      responses:
+        "200":
+          description: Maps list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UniverseMap"
+
+  /maps/{tier}:
+    get:
+      operationId: getMapByTier
+      tags: [maps]
+      summary: Get map for a specific tier
+      parameters:
+        - name: tier
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Map details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UniverseMap"
+
+  /stats/overview:
+    get:
+      operationId: getStatsOverview
+      tags: [stats]
+      summary: Get universe statistics overview
+      responses:
+        "200":
+          description: Stats overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsOverview"
+
+  /stats/tiers:
+    get:
+      operationId: getStatsByTier
+      tags: [stats]
+      summary: Get beast counts by tier
+      responses:
+        "200":
+          description: Tier statistics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TierStat"
+
+  /stats/species:
+    get:
+      operationId: getStatsBySpecies
+      tags: [stats]
+      summary: Get beast counts by species category
+      responses:
+        "200":
+          description: Species statistics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpeciesStat"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +402,272 @@ components:
       required:
         - status
 
+    Beast:
+      type: object
+      required: [id, name, tier, tierName, speciesId, speciesName, raceCategory, power, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        tier:
+          type: integer
+          description: 1-9 plus 10=Legendary, 11=Dark Legendary
+        tierName:
+          type: string
+          description: Vietnamese name of the tier
+        speciesId:
+          type: integer
+        speciesName:
+          type: string
+        raceCategory:
+          type: string
+          description: "Epic, Legend, Mythology, Divine, Folklore, Fantasy"
+        power:
+          type: integer
+          description: Power level of the beast
+        description:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        parentAId:
+          type: ["integer", "null"]
+        parentBId:
+          type: ["integer", "null"]
+        abilities:
+          type: ["string", "null"]
+          description: JSON array of abilities
+        subordinateCount:
+          type: integer
+          description: Number of beasts under management
+        isLegendary:
+          type: boolean
+        isDarkLegendary:
+          type: boolean
+        mapZone:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    BeastListResponse:
+      type: object
+      required: [beasts, total, page, limit]
+      properties:
+        beasts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Beast"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    BeastInput:
+      type: object
+      required: [name, tier, speciesId, raceCategory, power]
+      properties:
+        name:
+          type: string
+        tier:
+          type: integer
+        speciesId:
+          type: integer
+        raceCategory:
+          type: string
+        power:
+          type: integer
+        description:
+          type: string
+        imageUrl:
+          type: string
+        abilities:
+          type: string
+        mapZone:
+          type: string
+
+    BeastUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        tier:
+          type: integer
+        power:
+          type: integer
+        description:
+          type: string
+        imageUrl:
+          type: string
+        abilities:
+          type: string
+        mapZone:
+          type: string
+
+    BreedingRecord:
+      type: object
+      required: [id, parentAId, parentBId, offspringId, success, createdAt]
+      properties:
+        id:
+          type: integer
+        parentAId:
+          type: integer
+        parentAName:
+          type: ["string", "null"]
+        parentBId:
+          type: integer
+        parentBName:
+          type: ["string", "null"]
+        offspringId:
+          type: ["integer", "null"]
+        offspringName:
+          type: ["string", "null"]
+        success:
+          type: boolean
+        resultTier:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    BreedingInput:
+      type: object
+      required: [parentAId, parentBId, offspringName]
+      properties:
+        parentAId:
+          type: integer
+        parentBId:
+          type: integer
+        offspringName:
+          type: string
+
+    BreedingResult:
+      type: object
+      required: [record, offspring, success]
+      properties:
+        record:
+          $ref: "#/components/schemas/BreedingRecord"
+        offspring:
+          $ref: "#/components/schemas/Beast"
+        success:
+          type: boolean
+        message:
+          type: string
+
+    Species:
+      type: object
+      required: [id, name, category, origin, description]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+          description: "Epic, Legend, Mythology, Divine, Folklore, Fantasy"
+        origin:
+          type: string
+          description: Cultural or mythological origin
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        beastCount:
+          type: integer
+
+    SpeciesInput:
+      type: object
+      required: [name, category, origin, description]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        origin:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+
+    SpeciesUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        origin:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+
+    UniverseMap:
+      type: object
+      required: [id, tier, tierName, zoneName, description, climate, dangerLevel]
+      properties:
+        id:
+          type: integer
+        tier:
+          type: string
+        tierName:
+          type: string
+        zoneName:
+          type: string
+        description:
+          type: string
+        climate:
+          type: string
+        dangerLevel:
+          type: integer
+          description: 1-10 danger rating
+        beastCount:
+          type: integer
+        landmarks:
+          type: ["string", "null"]
+          description: JSON array of landmark names
+        imageUrl:
+          type: ["string", "null"]
+
+    StatsOverview:
+      type: object
+      required: [totalBeasts, totalSpecies, totalBreedings, legendaryCount, darkLegendaryCount, averagePower]
+      properties:
+        totalBeasts:
+          type: integer
+        totalSpecies:
+          type: integer
+        totalBreedings:
+          type: integer
+        legendaryCount:
+          type: integer
+        darkLegendaryCount:
+          type: integer
+        averagePower:
+          type: integer
+        highestTierBeast:
+          $ref: "#/components/schemas/Beast"
+
+    TierStat:
+      type: object
+      required: [tier, tierName, count, averagePower]
+      properties:
+        tier:
+          type: integer
+        tierName:
+          type: string
+        count:
+          type: integer
+        averagePower:
+          type: integer
+
+    SpeciesStat:
+      type: object
+      required: [category, count]
+      properties:
+        category:
+          type: string
+        count:
+          type: integer

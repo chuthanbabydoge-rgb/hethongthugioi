@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "b1SLaPrnO9HR3QVuNl9CV"
+uri = "file://artifacts/thu-gioi/public/galaxy-bg.png"
+type = "image"
+title = "Dark cosmic universe galaxy texture"
+
+[[generated]]
+id = "i9TyhKlS3rRUdZxJZKeUY"
+uri = "file://artifacts/thu-gioi/public/hero-beast.png"
+type = "image"
+title = "Mythical dragon beast hero"
+
+[[generated]]
+id = "QQ6Y_3QgeHmgc7YOkSp4I"
+uri = "file://artifacts/thu-gioi/public/ritual-bg.png"
+type = "image"
+title = "Breeding ritual circle"
