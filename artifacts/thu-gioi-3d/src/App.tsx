@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { CREATURES, CreatureModel, RARITY_COLORS, CATEGORY_ICONS } from "./data/creatures";
 import { breedCreatures } from "./utils/breeding";
 import { generateCreatureFromText } from "./utils/aiGenerator";
+import { saveCreatureToDatabase } from "./utils/saveToDatabase";
 import CreatureViewer from "./components/CreatureViewer";
 
 /* ──────────── PowerBar ──────────── */
@@ -351,6 +352,35 @@ function BreedingModal({
   );
 }
 
+/* ──────────── Save Toast ──────────── */
+type SaveStatus = { id: string; name: string; ok: boolean };
+
+function SaveToast({ toasts, onDismiss }: { toasts: SaveStatus[]; onDismiss: (id: string) => void }) {
+  if (toasts.length === 0) return null;
+  return (
+    <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none">
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          onClick={() => onDismiss(t.id)}
+          className={`pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-xl border text-sm font-medium shadow-xl cursor-pointer backdrop-blur-sm transition-all ${
+            t.ok
+              ? "bg-emerald-950/90 border-emerald-500/40 text-emerald-300"
+              : "bg-red-950/90 border-red-500/40 text-red-300"
+          }`}
+        >
+          <span>{t.ok ? "✅" : "❌"}</span>
+          <span>
+            {t.ok
+              ? `Đã lưu "${t.name}" vào Vạn Thú Giới`
+              : `Lưu "${t.name}" thất bại`}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ──────────── Main App ──────────── */
 const CATEGORIES = ["Tất Cả", "Động Vật", "Huyền Thoại", "Thần Thú", "Yêu Quái"] as const;
 
@@ -361,6 +391,7 @@ export default function App() {
   const [tab, setTab] = useState<"info" | "abilities">("info");
   const [showBreeding, setShowBreeding] = useState(false);
   const [generated, setGenerated] = useState<CreatureModel[]>([]);
+  const [saveToasts, setSaveToasts] = useState<SaveStatus[]>([]);
 
   const allCreatures = [...CREATURES, ...generated];
 
@@ -375,19 +406,31 @@ export default function App() {
   const rarityColor = RARITY_COLORS[selected.rarity];
   const isGenerated = generated.some((g) => g.id === selected.id);
 
-  const handleAIResult = (creature: CreatureModel) => {
+  const pushToast = useCallback((name: string, ok: boolean) => {
+    const id = `${Date.now()}_${Math.random()}`;
+    setSaveToasts((prev) => [...prev, { id, name, ok }]);
+    setTimeout(() => setSaveToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+  }, []);
+
+  const handleAIResult = useCallback((creature: CreatureModel) => {
     setGenerated((prev) => {
       const exists = prev.find((g) => g.id === creature.id);
       if (exists) return prev;
       return [creature, ...prev];
     });
     setSelected(creature);
-  };
+    saveCreatureToDatabase(creature)
+      .then((id) => pushToast(creature.name, id !== null))
+      .catch(() => pushToast(creature.name, false));
+  }, [pushToast]);
 
-  const handleBreedResult = (offspring: CreatureModel) => {
+  const handleBreedResult = useCallback((offspring: CreatureModel) => {
     setGenerated((prev) => [offspring, ...prev]);
     setSelected(offspring);
-  };
+    saveCreatureToDatabase(offspring)
+      .then((id) => pushToast(offspring.name, id !== null))
+      .catch(() => pushToast(offspring.name, false));
+  }, [pushToast]);
 
   return (
     <div className="min-h-screen bg-[#050714] text-white flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -640,6 +683,11 @@ export default function App() {
           onResult={handleBreedResult}
         />
       )}
+
+      <SaveToast
+        toasts={saveToasts}
+        onDismiss={(id) => setSaveToasts((prev) => prev.filter((t) => t.id !== id))}
+      />
     </div>
   );
 }
