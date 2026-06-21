@@ -1,5 +1,5 @@
 kind = "web"
-previewPath = "/"
+previewPath = "/thu-gioi-3d"
 title = "Thú Giới 3D — AI Tạo Sinh Vật"
 version = "1.0.0"
 id = "artifacts/thu-gioi-3d"
@@ -11,7 +11,7 @@ version = "1.0.0"
 
 [[services]]
 name = "web"
-paths = [ "/" ]
+paths = [ "/thu-gioi-3d" ]
 localPort = 21178
 
 [services.development]
@@ -28,4 +28,4 @@ to = "/index.html"
 
 [services.env]
 PORT = "21178"
-BASE_PATH = "/"
+BASE_PATH = "/thu-gioi-3d/"
