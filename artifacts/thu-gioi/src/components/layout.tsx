@@ -13,6 +13,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/breed", label: "Phối Giống" },
     { href: "/bestiary", label: "Thú Ký" },
     { href: "/map", label: "Bản Đồ" },
+    { href: "/ai-create", label: "✨ AI Tạo Thú" },
     { href: "/admin", label: "Quản Trị" },
   ];
 

@@ -10,6 +10,7 @@ import Breed from "@/pages/breed";
 import Bestiary from "@/pages/bestiary";
 import Map from "@/pages/map";
 import Admin from "@/pages/admin";
+import AICreate from "@/pages/ai-create";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ function Router() {
         <Route path="/breed" component={Breed} />
         <Route path="/bestiary" component={Bestiary} />
         <Route path="/map" component={Map} />
+        <Route path="/ai-create" component={AICreate} />
         <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
