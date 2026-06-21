@@ -1,0 +1,1 @@
+- [WebGL/XR fallback pattern](webgl-xr-fallback.md) — Replit preview has no GPU; must detect before rendering Canvas or XR store crashes with overlay.
