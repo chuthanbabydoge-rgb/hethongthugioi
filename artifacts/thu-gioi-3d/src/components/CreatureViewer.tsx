@@ -1,0 +1,313 @@
+import { useRef, useMemo } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls, Stars, Float } from "@react-three/drei";
+import * as THREE from "three";
+import { CreatureModel } from "../data/creatures";
+
+function Wing({ position, rotation, color, span }: { position: [number, number, number]; rotation: [number, number, number]; color: string; span: number }) {
+  const wingShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(0, 0);
+    shape.quadraticCurveTo(span * 0.5, span * 0.4, span, 0);
+    shape.quadraticCurveTo(span * 0.6, -span * 0.3, span * 0.3, -span * 0.5);
+    shape.quadraticCurveTo(span * 0.1, -span * 0.2, 0, 0);
+    return shape;
+  }, [span]);
+
+  const geometry = useMemo(() => new THREE.ShapeGeometry(wingShape), [wingShape]);
+
+  return (
+    <mesh position={position} rotation={rotation} geometry={geometry}>
+      <meshStandardMaterial color={color} transparent opacity={0.75} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+function Horn({ position, color }: { position: [number, number, number]; color: string }) {
+  return (
+    <mesh position={position}>
+      <coneGeometry args={[0.05, 0.4, 6]} />
+      <meshStandardMaterial color={color} metalness={0.8} roughness={0.1} />
+    </mesh>
+  );
+}
+
+function Spike({ position, scale }: { position: [number, number, number]; scale: number }) {
+  return (
+    <mesh position={position} scale={[scale, scale, scale]}>
+      <coneGeometry args={[0.04, 0.25, 4]} />
+      <meshStandardMaterial color="#374151" metalness={0.5} roughness={0.3} />
+    </mesh>
+  );
+}
+
+function ParticleSystem({ color, count, auraScale }: { color: string; count: number; auraScale: number }) {
+  const ref = useRef<THREE.Points>(null);
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const r = auraScale * (0.8 + Math.random() * 0.4);
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      pos[i * 3 + 2] = r * Math.cos(phi);
+    }
+    return pos;
+  }, [count, auraScale]);
+
+  useFrame((_, delta) => {
+    if (ref.current) {
+      ref.current.rotation.y += delta * 0.3;
+      ref.current.rotation.x += delta * 0.1;
+    }
+  });
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial color={color} size={0.05} transparent opacity={0.8} sizeAttenuation />
+    </points>
+  );
+}
+
+function CreatureMesh({ creature }: { creature: CreatureModel }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const tailRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.15;
+      groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.6) * 0.08;
+    }
+    if (tailRef.current) {
+      tailRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 1.2) * 0.3;
+    }
+  });
+
+  const [bx, by, bz] = creature.bodyScale;
+  const hs = creature.headScale;
+
+  return (
+    <group ref={groupRef}>
+      {/* Aura glow */}
+      <mesh>
+        <sphereGeometry args={[creature.auraScale * 0.8, 16, 16]} />
+        <meshStandardMaterial
+          color={creature.glowColor}
+          transparent
+          opacity={0.05}
+          emissive={creature.glowColor}
+          emissiveIntensity={creature.emissiveIntensity * 0.3}
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      {/* Body */}
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[0.6, 32, 32]} />
+        <meshStandardMaterial
+          color={creature.bodyColor}
+          roughness={creature.roughness}
+          metalness={creature.metalness}
+          emissive={creature.glowColor}
+          emissiveIntensity={creature.emissiveIntensity * 0.15}
+        />
+      </mesh>
+
+      {/* Body elongation */}
+      <mesh position={[0, 0, 0]} scale={[bx, by, bz]}>
+        <sphereGeometry args={[0.55, 32, 32]} />
+        <meshStandardMaterial
+          color={creature.bodyColor}
+          roughness={creature.roughness}
+          metalness={creature.metalness}
+          emissive={creature.glowColor}
+          emissiveIntensity={creature.emissiveIntensity * 0.1}
+        />
+      </mesh>
+
+      {/* Chest accent */}
+      <mesh position={[0, 0, 0.4]}>
+        <sphereGeometry args={[0.35, 16, 16]} />
+        <meshStandardMaterial
+          color={creature.accentColor}
+          roughness={creature.roughness + 0.1}
+          metalness={creature.metalness}
+          emissive={creature.accentColor}
+          emissiveIntensity={creature.emissiveIntensity * 0.2}
+        />
+      </mesh>
+
+      {/* Head */}
+      <mesh position={[0, 0.55, 0.5]}>
+        <sphereGeometry args={[hs, 24, 24]} />
+        <meshStandardMaterial
+          color={creature.bodyColor}
+          roughness={creature.roughness}
+          metalness={creature.metalness}
+          emissive={creature.glowColor}
+          emissiveIntensity={creature.emissiveIntensity * 0.2}
+        />
+      </mesh>
+
+      {/* Snout */}
+      <mesh position={[0, 0.45, 0.9]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[hs * 0.3, hs * 0.4, 0.35, 12]} />
+        <meshStandardMaterial color={creature.bodyColor} roughness={creature.roughness} metalness={creature.metalness} />
+      </mesh>
+
+      {/* Eyes */}
+      <mesh position={[hs * 0.4, 0.62, 0.82]}>
+        <sphereGeometry args={[0.08, 8, 8]} />
+        <meshStandardMaterial color={creature.glowColor} emissive={creature.glowColor} emissiveIntensity={2} />
+      </mesh>
+      <mesh position={[-hs * 0.4, 0.62, 0.82]}>
+        <sphereGeometry args={[0.08, 8, 8]} />
+        <meshStandardMaterial color={creature.glowColor} emissive={creature.glowColor} emissiveIntensity={2} />
+      </mesh>
+
+      {/* Horns */}
+      {creature.hasHorns && creature.hornCount >= 1 && (
+        <>
+          <Horn position={[hs * 0.22, 1.05, 0.55]} color={creature.accentColor} />
+          {creature.hornCount >= 2 && (
+            <Horn position={[-hs * 0.22, 1.05, 0.55]} color={creature.accentColor} />
+          )}
+        </>
+      )}
+
+      {/* Wings */}
+      {creature.hasWings && (
+        <>
+          <Wing
+            position={[0.65, 0.1, -0.1]}
+            rotation={[-0.2, -0.3, 0.2]}
+            color={creature.accentColor}
+            span={creature.wingSpan * 0.55}
+          />
+          <Wing
+            position={[-0.65, 0.1, -0.1]}
+            rotation={[-0.2, 0.3, -0.2]}
+            color={creature.accentColor}
+            span={creature.wingSpan * 0.55}
+          />
+        </>
+      )}
+
+      {/* Tail */}
+      {creature.hasTail && (
+        <mesh ref={tailRef} position={[0, -0.1, -0.75]} rotation={[0.3, 0, 0]}>
+          <cylinderGeometry args={[0.12, 0.04, creature.tailLength, 8]} />
+          <meshStandardMaterial
+            color={creature.bodyColor}
+            roughness={creature.roughness}
+            metalness={creature.metalness}
+          />
+        </mesh>
+      )}
+
+      {/* Spikes along spine */}
+      {creature.hasSpikes && (
+        <>
+          {[-0.3, -0.1, 0.1, 0.3].map((z, i) => (
+            <Spike key={i} position={[0, 0.65 + i * 0.04, z]} scale={0.8 - i * 0.1} />
+          ))}
+        </>
+      )}
+
+      {/* Legs */}
+      {creature.legCount === 4 && (
+        <>
+          {[
+            [0.4, -0.45, 0.3] as [number, number, number],
+            [-0.4, -0.45, 0.3] as [number, number, number],
+            [0.35, -0.45, -0.25] as [number, number, number],
+            [-0.35, -0.45, -0.25] as [number, number, number],
+          ].map((pos, i) => (
+            <mesh key={i} position={pos} rotation={[0.3, 0, i < 2 ? 0.2 * (i === 0 ? 1 : -1) : 0]}>
+              <cylinderGeometry args={[0.1, 0.07, 0.55, 8]} />
+              <meshStandardMaterial color={creature.bodyColor} roughness={creature.roughness} metalness={creature.metalness} />
+            </mesh>
+          ))}
+        </>
+      )}
+      {creature.legCount === 2 && (
+        <>
+          {[
+            [0.25, -0.55, 0.1] as [number, number, number],
+            [-0.25, -0.55, 0.1] as [number, number, number],
+          ].map((pos, i) => (
+            <mesh key={i} position={pos} rotation={[0.2, 0, i === 0 ? 0.15 : -0.15]}>
+              <cylinderGeometry args={[0.1, 0.07, 0.5, 8]} />
+              <meshStandardMaterial color={creature.bodyColor} roughness={creature.roughness} metalness={creature.metalness} />
+            </mesh>
+          ))}
+        </>
+      )}
+      {creature.legCount === 8 && (
+        <>
+          {Array.from({ length: 8 }, (_, i) => {
+            const angle = (i / 8) * Math.PI * 2;
+            return (
+              <mesh key={i} position={[Math.cos(angle) * 0.7, -0.3, Math.sin(angle) * 0.7]} rotation={[0, angle, 0.6]}>
+                <cylinderGeometry args={[0.07, 0.04, 0.7, 6]} />
+                <meshStandardMaterial color={creature.bodyColor} roughness={creature.roughness} metalness={creature.metalness} />
+              </mesh>
+            );
+          })}
+        </>
+      )}
+
+      {/* Particle system */}
+      <ParticleSystem color={creature.particleColor} count={creature.particleCount} auraScale={creature.auraScale} />
+    </group>
+  );
+}
+
+interface CreatureViewerProps {
+  creature: CreatureModel;
+}
+
+export default function CreatureViewer({ creature }: CreatureViewerProps) {
+  return (
+    <div className="w-full h-full">
+      <Canvas
+        camera={{ position: [0, 1, 4], fov: 50 }}
+        gl={{ antialias: true, alpha: true }}
+        style={{ background: "transparent" }}
+      >
+        <ambientLight intensity={0.3} />
+        <pointLight position={[5, 5, 5]} intensity={1.5} color="#ffffff" />
+        <pointLight position={[-5, -5, -5]} intensity={0.5} color={creature.glowColor} />
+        <pointLight position={[0, 5, 0]} intensity={0.8} color={creature.accentColor} />
+        <spotLight
+          position={[0, 8, 0]}
+          angle={0.4}
+          penumbra={0.5}
+          intensity={2}
+          color={creature.glowColor}
+          castShadow
+        />
+
+        <Stars radius={80} depth={50} count={3000} factor={4} saturation={0} fade speed={1} />
+
+        <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.3}>
+          <CreatureMesh creature={creature} />
+        </Float>
+
+        <OrbitControls
+          enableZoom
+          enablePan={false}
+          minDistance={2.5}
+          maxDistance={8}
+          minPolarAngle={Math.PI / 6}
+          maxPolarAngle={Math.PI * 0.75}
+          autoRotate={false}
+        />
+      </Canvas>
+    </div>
+  );
+}

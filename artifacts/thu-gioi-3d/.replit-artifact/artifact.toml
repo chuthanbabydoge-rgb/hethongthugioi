@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Thú Giới 3D — AI Tạo Sinh Vật"
+version = "1.0.0"
+id = "artifacts/thu-gioi-3d"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21178
+
+[services.development]
+run = "pnpm --filter @workspace/thu-gioi-3d run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/thu-gioi-3d", "run", "build" ]
+publicDir = "artifacts/thu-gioi-3d/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21178"
+BASE_PATH = "/"
