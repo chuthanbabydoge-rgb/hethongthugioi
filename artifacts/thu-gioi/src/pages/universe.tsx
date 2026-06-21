@@ -30,6 +30,7 @@ export default function Universe() {
   const webGLSupported = useWebGLSupported();
   const xrStore = useXRStore(webGLSupported);
   const [viewMode, setViewMode] = useState<"3d" | "list">("3d");
+  const [contextLost, setContextLost] = useState(false);
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
   
   const params = selectedTier ? { tier: selectedTier, limit: 100 } : { limit: 100 };
@@ -64,13 +65,23 @@ export default function Universe() {
             <div className="absolute inset-0 flex items-center justify-center text-primary font-serif animate-pulse">
               Đang kiến tạo không gian...
             </div>
-          ) : webGLSupported ? (
+          ) : webGLSupported && !contextLost ? (
             <CanvasErrorBoundary fallback={
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground font-serif text-sm">
                 WebGL không khả dụng — chuyển sang danh sách 2D
               </div>
             }>
-              <Canvas gl={{ antialias: true, alpha: true }} camera={{ position: [0, 0, 25], fov: 60 }} style={{ background: 'transparent' }}>
+              <Canvas
+                gl={{ antialias: true, alpha: true }}
+                camera={{ position: [0, 0, 25], fov: 60 }}
+                style={{ background: 'transparent' }}
+                onCreated={({ gl }) => {
+                  gl.domElement.addEventListener("webglcontextlost", (e) => {
+                    e.preventDefault();
+                    setContextLost(true);
+                  }, false);
+                }}
+              >
                 {xrStore ? (
                   <XR store={xrStore}>
                     <Suspense fallback={null}>

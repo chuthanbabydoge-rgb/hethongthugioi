@@ -18,6 +18,7 @@ export default function Map() {
   const { data: maps, isLoading } = useListMaps();
   const [viewMode, setViewMode] = useState<"3d" | "list">("3d");
   const [selectedMap, setSelectedMap] = useState<any | null>(null);
+  const [contextLost, setContextLost] = useState(false);
 
   return (
     <div className="p-8 max-w-7xl mx-auto min-h-full flex flex-col">
@@ -44,13 +45,23 @@ export default function Map() {
                <div className="w-full h-full flex items-center justify-center text-primary font-serif animate-pulse">
                  Đang mở cổng không gian...
                </div>
-            ) : webGLSupported ? (
+            ) : webGLSupported && !contextLost ? (
               <CanvasErrorBoundary fallback={
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground font-serif text-sm">
                   WebGL không khả dụng — xem danh sách vùng bên dưới
                 </div>
               }>
-                <Canvas gl={{ antialias: true, alpha: true }} camera={{ position: [0, 5, 25], fov: 60 }} style={{ background: 'transparent' }}>
+                <Canvas
+                  gl={{ antialias: true, alpha: true }}
+                  camera={{ position: [0, 5, 25], fov: 60 }}
+                  style={{ background: 'transparent' }}
+                  onCreated={({ gl }) => {
+                    gl.domElement.addEventListener("webglcontextlost", (e) => {
+                      e.preventDefault();
+                      setContextLost(true);
+                    }, false);
+                  }}
+                >
                   {xrStore ? (
                     <XR store={xrStore}>
                       <Suspense fallback={null}>
