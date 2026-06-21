@@ -80,7 +80,7 @@
 - ✅ **MapZone3D** — Bản đồ vũ trụ 3D phân tầng hình trụ
 - ✅ **SpatialScene** — Background scene nền toàn trang
 - ✅ **XRButton** — Nút vào chế độ VR/AR (chỉ hiện khi thiết bị hỗ trợ)
-- ⬜ **BreedingPortal** — Cổng lai tạo hiệu ứng 3D
+- ✅ **BreedingPortal** — Cổng lai tạo 3D: hai quả cầu xoay hội tụ, vòng xoáy vortex, particles phát nổ
 
 ### VR / AR / MR / XR
 - ✅ WebXR Session Manager (createXRStore lazy)
@@ -127,4 +127,4 @@
 ---
 
 _Cập nhật lần cuối: 2026-06-21_
-_Phiên bản: v2.0-spatial-stable_
+_Phiên bản: v2.0-spatial-complete_
