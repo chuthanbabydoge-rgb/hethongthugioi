@@ -178,7 +178,6 @@ export const CREATURES: CreatureModel[] = [
     roughness: 0.8,
     metalness: 0.4,
     particleColor: "#93c5fd",
-    particleColor: "#93c5fd",
     particleCount: 50,
     auraScale: 1.7,
     abilities: ["Lá Chắn Huyền Bí", "Tiên Tri", "Kiểm Soát Nước", "Bất Tử"],
