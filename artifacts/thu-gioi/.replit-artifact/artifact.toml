@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "Thú Giới"
+title = "THÚ GIỚI - Vũ Trụ Lai Tạo Động Vật"
 version = "1.0.0"
 id = "artifacts/thu-gioi"
 router = "path"
