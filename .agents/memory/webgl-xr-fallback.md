@@ -32,3 +32,19 @@ Never render `<Canvas>` or call `createXRStore()` in Replit's preview unless Web
 4. Remove `runtimeErrorOverlay()` from `vite.config.ts` plugins — the plugin intercepts ALL unhandled errors and shows the blocking overlay, including from Three.js internals that escape React boundaries.
 
 5. `CanvasErrorBoundary` (`src/components/spatial/CanvasErrorBoundary.tsx`) — React class error boundary wrapping every `<Canvas>` as a last-resort catch.
+
+6. **Runtime context-loss after startup** — even when WebGL passes the initial check, the context can be LOST during use (Replit throttles GPU). Fix: add `webglcontextlost` listener in `onCreated` callback + unmount Canvas on loss. Also add global error handlers in `main.tsx` to swallow non-Error exceptions from Three.js internals that escape all React boundaries:
+   ```tsx
+   // SpatialScene — handle loss at runtime
+   <Canvas onCreated={({ gl }) => {
+     gl.domElement.addEventListener("webglcontextlost", (e) => { e.preventDefault(); setContextLost(true); });
+   }}>
+   
+   // main.tsx — global safety net for non-Error throws
+   window.addEventListener("error", (e) => {
+     if (!e.error || typeof e.error !== "object") { e.stopImmediatePropagation(); e.preventDefault(); }
+   });
+   window.addEventListener("unhandledrejection", (e) => {
+     if (!e.reason || typeof e.reason !== "object") { e.preventDefault(); }
+   });
+   ```

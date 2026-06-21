@@ -1,6 +1,6 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Stars, Float, Sparkles } from "@react-three/drei";
-import { Suspense, useRef } from "react";
+import { Suspense, useRef, useState } from "react";
 import * as THREE from "three";
 import { CanvasErrorBoundary } from "./CanvasErrorBoundary";
 import { useWebGLSupported } from "@/hooks/useWebGLSupported";
@@ -36,11 +36,25 @@ function SceneElements() {
 
 export function SpatialScene() {
   const webGLSupported = useWebGLSupported();
-  if (!webGLSupported) return null;
+  const [contextLost, setContextLost] = useState(false);
+
+  if (!webGLSupported || contextLost) return null;
+
   return (
     <CanvasErrorBoundary>
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
-        <Canvas gl={{ antialias: true, alpha: true }} camera={{ position: [0, 0, 15], fov: 60 }}>
+        <Canvas
+          gl={{ antialias: true, alpha: true }}
+          camera={{ position: [0, 0, 15], fov: 60 }}
+          onCreated={({ gl }) => {
+            const canvas = gl.domElement;
+            const handleLost = (e: Event) => {
+              e.preventDefault();
+              setContextLost(true);
+            };
+            canvas.addEventListener("webglcontextlost", handleLost, false);
+          }}
+        >
           <Suspense fallback={null}>
             <SceneElements />
           </Suspense>
